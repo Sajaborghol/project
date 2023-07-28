@@ -1,4 +1,5 @@
 from flask import request, jsonify
+from yourapp import get_database_connection
 class Player:
 
 #constructor
@@ -22,14 +23,25 @@ def Data_of_players():
     #user enters total nb of players
     global iD
     if request.method=="POST":
-        first_name=request.form["Enter player's first name:"]
-        last_name=request.form["Enter player's last name:"]
-        APT= int(request.form["Enter player's APT:"])
-        SET=  int(request.form["Enter player's SET:"])
-        National_association=request.form["Enter player's national association:"]
-        position= request.form["Enter player's position:"]
+        data= request.get_json()
 
-    #create a player object and append it to the list
-    players.append(Player(iD, first_name, last_name, APT, SET, National_association,position))
-    iD=iD+1
-    return jsonify({"Message:":"Player Created Successfully"}),201
+        first_name=data.get("Enter player's first name:")
+        last_name=data.get("Enter player's last name:")
+        APT= int(data.get("Enter player's APT:"))
+        SET=  int(data.get("Enter player's SET:"))
+        National_association=data.get("Enter player's national association:")
+        position= data.get("Enter player's position:")
+
+        db,cursor =get_database_connection()
+
+        query ="INSERT INTO players (ID, first_name, last_name, APT, `SET`, National_association, position) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        values= (int(iD), first_name, last_name, int(APT), int(SET), National_association, position)
+        cursor.execute(query, values)
+        db.commit()
+        cursor.close()
+        db.close()
+        #create a player object and append it to the list
+        players.append(Player(iD, first_name, last_name, APT, SET, National_association, position))
+        #players.append(Player(iD, first_name, last_name, APT, SET, National_association,position))
+        iD=iD+1
+        return jsonify({"Message:":"Player Created Successfully"}),201
